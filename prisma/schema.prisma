@@ -1,0 +1,246 @@
+// Hyle Edify — Prisma schema
+// Postgres (Supabase). Money is stored in PAISE (₹1 = 100 paise) to match Razorpay.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")      // pooled (pgbouncer) connection
+  directUrl = env("DIRECT_URL")        // direct connection for migrations
+}
+
+// ---------------------------------------------------------------------------
+// Users & roles
+// ---------------------------------------------------------------------------
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  id        String   @id @db.Uuid // = Supabase auth.users.id
+  email     String   @unique
+  fullName  String?
+  phone     String?
+  role      Role     @default(STUDENT)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrollments   Enrollment[]
+  payments      Payment[]
+  videoProgress VideoProgress[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Course catalog: Course → Module → Lesson (RECORDED video | LIVE session)
+// ---------------------------------------------------------------------------
+
+model Course {
+  id           String  @id @default(uuid()) @db.Uuid
+  slug         String  @unique
+  title        String
+  subtitle     String?
+  description  String?
+  priceInPaise Int // e.g. ₹6,000 = 600000
+  thumbnailUrl String?
+  isPublished  Boolean @default(false)
+  sortOrder    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modules      Module[]
+  enrollments  Enrollment[]
+  payments     Payment[]
+  liveSessions LiveSession[]
+
+  @@map("courses")
+}
+
+model Module {
+  id        String @id @default(uuid()) @db.Uuid
+  courseId  String @db.Uuid
+  title     String
+  sortOrder Int    @default(0)
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+enum LessonType {
+  RECORDED
+  LIVE
+}
+
+model Lesson {
+  id            String     @id @default(uuid()) @db.Uuid
+  moduleId      String     @db.Uuid
+  title         String
+  description   String?
+  type          LessonType @default(RECORDED)
+  sortOrder     Int        @default(0)
+  isFreePreview Boolean    @default(false) // watchable without enrollment
+
+  module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  video       Video?
+  liveSession LiveSession?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+// ---------------------------------------------------------------------------
+// Videos & second-level progress tracking
+// ---------------------------------------------------------------------------
+
+enum VideoProvider {
+  YOUTUBE // unlisted links (MVP)
+  VIMEO
+  MUX
+}
+
+model Video {
+  id              String        @id @default(uuid()) @db.Uuid
+  lessonId        String        @unique @db.Uuid
+  provider        VideoProvider @default(YOUTUBE)
+  providerVideoId String // YouTube id / Vimeo id / Mux playback id
+  durationSeconds Int    @default(0)
+
+  lesson   Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  progress VideoProgress[]
+
+  @@map("videos")
+}
+
+/// One row per (user, video). Updated by the player heartbeat (~10 s).
+model VideoProgress {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @db.Uuid
+  videoId String @db.Uuid
+
+  lastPositionSeconds Int     @default(0) // resume point ("where they left off")
+  maxPositionSeconds  Int     @default(0) // furthest point ever reached
+  watchedSeconds      Int     @default(0) // cumulative watch time (rewatches included)
+  completed           Boolean @default(false) // maxPosition >= 90% of duration
+
+  firstWatchedAt DateTime @default(now())
+  lastWatchedAt  DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@map("video_progress")
+}
+
+// ---------------------------------------------------------------------------
+// Live classes (Zoom / Google Meet)
+// ---------------------------------------------------------------------------
+
+enum LiveProvider {
+  ZOOM
+  GOOGLE_MEET
+}
+
+model LiveSession {
+  id              String       @id @default(uuid()) @db.Uuid
+  courseId        String       @db.Uuid
+  lessonId        String?      @unique @db.Uuid // optional link into the syllabus
+  title           String
+  provider        LiveProvider @default(GOOGLE_MEET)
+  joinUrl         String
+  scheduledAt     DateTime
+  durationMinutes Int          @default(60)
+  recordingUrl    String? // filled after class, if recorded
+
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([courseId, scheduledAt])
+  @@map("live_sessions")
+}
+
+// ---------------------------------------------------------------------------
+// Payments (Razorpay) & enrollment
+// ---------------------------------------------------------------------------
+
+enum PaymentStatus {
+  CREATED // Razorpay order created, checkout not finished
+  CAPTURED // money received — triggers enrollment
+  FAILED
+  REFUNDED
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  courseId          String        @db.Uuid
+  razorpayOrderId   String        @unique
+  razorpayPaymentId String?       @unique
+  amountInPaise     Int
+  currency          String        @default("INR")
+  status            PaymentStatus @default(CREATED)
+  failureReason     String?
+
+  user       User        @relation(fields: [userId], references: [id])
+  course     Course      @relation(fields: [courseId], references: [id])
+  enrollment Enrollment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("payments")
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+model Enrollment {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  courseId  String           @db.Uuid
+  paymentId String?          @unique @db.Uuid
+  status    EnrollmentStatus @default(ACTIVE)
+
+  enrolledAt DateTime  @default(now())
+  expiresAt  DateTime? // null = lifetime access
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@map("enrollments")
+}
+
+/// Razorpay webhook idempotency ledger — an event id is processed exactly once.
+model WebhookEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventId     String   @unique // x-razorpay-event-id header
+  eventType   String // e.g. payment.captured
+  payload     Json
+  processedAt DateTime @default(now())
+
+  @@map("webhook_events")
+}

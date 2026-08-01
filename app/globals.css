@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Hyle Edify brand theme — "Where Matter Becomes Mastery"
+   Green #72BF44 (molecule mark) · Navy #07456B (wordmark)
+--------------------------------------------------------------------------- */
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a2540;
+
+  --primary: #07456b; /* Hyle navy */
+  --primary-foreground: #ffffff;
+
+  --accent: #72bf44; /* Hyle green */
+  --accent-foreground: #ffffff;
+
+  --secondary: #eef6f9;
+  --secondary-foreground: #07456b;
+
+  --muted: #f4f7f5;
+  --muted-foreground: #5b6b78;
+
+  --card: #ffffff;
+  --card-foreground: #0a2540;
+  --popover: #ffffff;
+  --popover-foreground: #0a2540;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #72bf44;
+
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #06202f;
+  --foreground: #eef6f9;
+
+  --primary: #72bf44;
+  --primary-foreground: #06202f;
+
+  --accent: #72bf44;
+  --accent-foreground: #06202f;
+
+  --secondary: #0a334d;
+  --secondary-foreground: #eef6f9;
+
+  --muted: #0a334d;
+  --muted-foreground: #9db4c0;
+
+  --card: #07293d;
+  --card-foreground: #eef6f9;
+  --popover: #07293d;
+  --popover-foreground: #eef6f9;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #133c55;
+  --input: #133c55;
+  --ring: #72bf44;
+}
+
+@theme inline {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Direct brand aliases: bg-hyle-green, text-hyle-navy, ... */
+  --color-hyle-green: #72bf44;
+  --color-hyle-navy: #07456b;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}

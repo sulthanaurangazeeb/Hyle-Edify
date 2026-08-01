@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm install --no-audit --no-fund)",
+      "Bash(which node *)",
+      "Bash(node --version)",
+      "Bash(ls -d node_modules)",
+      "Bash(ls .claude)",
+      "Bash(npx tsx -e ' *)",
+      "PowerShell(Get-Process -Id 1916)",
+      "PowerShell(Stop-Process -Id 1916 -Force -Confirm:$false)",
+      "PowerShell(Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet -WarningAction SilentlyContinue)"
+    ]
+  }
+}
