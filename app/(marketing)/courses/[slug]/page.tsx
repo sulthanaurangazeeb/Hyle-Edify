@@ -1,141 +1,36 @@
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, MonitorPlay, Radio } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock3, FlaskConical, MonitorPlay, Radio, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isEnrolled } from "@/lib/auth";
-import { formatInr } from "@/lib/utils";
+import { formatInr, formatDuration } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RazorpayCheckoutButton } from "@/components/razorpay-checkout-button";
-import Link from "next/link";
 
-export default async function CourseDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+function safeImageUrl(url: string | null) {
+  if (!url) return null;
+  if (url.startsWith("/")) return url;
+  try { const parsed = new URL(url); return parsed.protocol === "https:" && parsed.hostname.endsWith("supabase.co") ? url : null; } catch { return null; }
+}
+
+export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-
-  const course = await prisma.course.findUnique({
-    where: { slug },
-    include: {
-      modules: {
-        orderBy: { sortOrder: "asc" },
-        include: {
-          lessons: {
-            orderBy: { sortOrder: "asc" },
-            select: { id: true, title: true, type: true, isFreePreview: true },
-          },
-        },
-      },
-    },
-  });
+  const course = await prisma.course.findUnique({ where: { slug }, select: { id: true, title: true, slug: true, subtitle: true, description: true, priceInPaise: true, thumbnailUrl: true, isPublished: true, modules: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, lessons: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, type: true, isFreePreview: true, video: { select: { durationSeconds: true } } } } } } } });
   if (!course || !course.isPublished) notFound();
-
   const user = await getSessionUser();
   const enrolled = user ? await isEnrolled(user.id, course.id) : false;
-  const lessonCount = course.modules.reduce(
-    (n, m) => n + m.lessons.length,
-    0
-  );
+  const lessons = course.modules.flatMap((module) => module.lessons);
+  const recordedCount = lessons.filter((lesson) => lesson.type === "RECORDED").length;
+  const liveCount = lessons.filter((lesson) => lesson.type === "LIVE").length;
+  const imageUrl = safeImageUrl(course.thumbnailUrl);
 
-  return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[1fr_360px]">
-      {/* Left: details + syllabus */}
-      <div>
-        <h1 className="text-3xl font-bold text-hyle-navy">{course.title}</h1>
-        {course.subtitle && (
-          <p className="mt-2 text-lg text-muted-foreground">{course.subtitle}</p>
-        )}
-        {course.description && (
-          <p className="mt-4 whitespace-pre-line text-muted-foreground">
-            {course.description}
-          </p>
-        )}
+  return <div className="bg-[#f6faf8]"><section className="border-b bg-white"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-8 lg:py-20"><div><Link href="/#courses" className="text-sm font-semibold text-hyle-navy hover:text-hyle-green">← All courses</Link><div className="mt-8 flex flex-wrap gap-2"><Badge variant="secondary">Foundation programme</Badge><Badge variant="accent">{course.priceInPaise === 0 ? "Free to start" : "Enrolment open"}</Badge></div><h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-hyle-navy sm:text-5xl">{course.title}</h1>{course.subtitle && <p className="mt-4 text-xl text-slate-600">{course.subtitle}</p>}{course.description && <p className="mt-5 max-w-2xl whitespace-pre-line leading-7 text-slate-600">{course.description}</p>}<div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-slate-600"><span className="flex items-center gap-2"><MonitorPlay className="h-4 w-4 text-hyle-green" />{recordedCount} recorded</span><span className="flex items-center gap-2"><Radio className="h-4 w-4 text-hyle-green" />{liveCount} live</span><span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-hyle-green" />{course.modules.length} modules</span></div></div><div className="relative overflow-hidden rounded-3xl border bg-secondary shadow-xl">{imageUrl ? <Image src={imageUrl} alt={`${course.title} thumbnail`} width={900} height={506} className="aspect-video w-full object-cover" priority /> : <div className="flex aspect-video flex-col items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#d9efc9,transparent_35%),linear-gradient(135deg,#eef6f9,#dbeaf0)] text-hyle-navy"><FlaskConical className="h-14 w-14 text-hyle-green" /><span className="mt-4 text-xs font-bold uppercase tracking-[0.2em]">Course preview</span></div>}</div></div></section>
 
-        <h2 className="mb-4 mt-10 text-xl font-semibold text-hyle-navy">
-          Syllabus{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({course.modules.length} modules · {lessonCount} lessons)
-          </span>
-        </h2>
-
-        {course.modules.length === 0 && (
-          <p className="text-muted-foreground">Syllabus coming soon.</p>
-        )}
-
-        <div className="space-y-4">
-          {course.modules.map((mod, i) => (
-            <Card key={mod.id}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">
-                  Module {i + 1}: {mod.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {mod.lessons.map((lesson) => (
-                    <li
-                      key={lesson.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      {lesson.type === "LIVE" ? (
-                        <Radio className="h-4 w-4 shrink-0 text-hyle-green" />
-                      ) : (
-                        <MonitorPlay className="h-4 w-4 shrink-0 text-hyle-green" />
-                      )}
-                      <span>{lesson.title}</span>
-                      {lesson.isFreePreview && (
-                        <Badge variant="secondary">Free preview</Badge>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Right: purchase card */}
-      <div>
-        <Card className="sticky top-24">
-          <CardHeader>
-            <CardTitle className="text-3xl text-hyle-navy">
-              {formatInr(course.priceInPaise)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {enrolled ? (
-              <Link href={`/learn/${course.slug}`} className="block">
-                <Button size="lg" variant="accent" className="w-full font-semibold">
-                  Continue learning
-                </Button>
-              </Link>
-            ) : (
-              <RazorpayCheckoutButton
-                courseId={course.id}
-                courseSlug={course.slug}
-                priceLabel={formatInr(course.priceInPaise)}
-                isLoggedIn={!!user}
-              />
-            )}
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {[
-                "Full access to all recorded lessons",
-                "Live classes with teachers",
-                "Progress tracking & resume anywhere",
-                "Secure payment via Razorpay (UPI/cards)",
-              ].map((line) => (
-                <li key={line} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-hyle-green" />
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+    <section className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8"><div className="space-y-12"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-hyle-green">Why this course</p><h2 className="mt-3 text-2xl font-bold text-hyle-navy sm:text-3xl">A structured way to keep learning moving.</h2><div className="mt-6 grid gap-3 sm:grid-cols-2">{["Clear modules and lessons", "Live + recorded learning", "Free previews where available", "Progress tracking and resume"].map((item) => <div key={item} className="flex gap-3 rounded-xl border bg-white p-4"><CheckCircle2 className="h-5 w-5 shrink-0 text-hyle-green" /><span className="text-sm font-medium text-hyle-navy">{item}</span></div>)}</div></div><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-hyle-green">Course syllabus</p><h2 className="mt-3 text-2xl font-bold text-hyle-navy sm:text-3xl">Explore the learning path.</h2><div className="mt-6 space-y-4">{course.modules.length === 0 && <p className="rounded-xl border border-dashed bg-white p-6 text-sm text-slate-500">Syllabus coming soon.</p>}{course.modules.map((mod, i) => <Card key={mod.id} className="border-slate-200/80 shadow-sm"><CardHeader className="pb-3"><CardTitle className="text-base text-hyle-navy">Module {i + 1}: {mod.title}</CardTitle></CardHeader><CardContent><ul className="space-y-3">{mod.lessons.map((lesson) => <li key={lesson.id} className="flex items-center gap-3 text-sm text-slate-600">{lesson.type === "LIVE" ? <Radio className="h-4 w-4 shrink-0 text-hyle-green" /> : <MonitorPlay className="h-4 w-4 shrink-0 text-hyle-green" />}<span className="flex-1">{lesson.title}</span>{lesson.video?.durationSeconds ? <span className="text-xs text-slate-400">{formatDuration(lesson.video.durationSeconds)}</span> : null}{lesson.isFreePreview && <Badge variant="secondary">Free preview</Badge>}</li>)}</ul></CardContent></Card>)}</div></div><div className="rounded-2xl border bg-white p-6"><div className="flex items-center gap-3"><ShieldCheck className="h-6 w-6 text-hyle-green" /><p className="font-semibold text-hyle-navy">Learning support</p></div><p className="mt-3 text-sm leading-6 text-slate-600">Access live and recorded lessons, keep your place, and build consistent learning habits through the student dashboard.</p></div></div>
+      <aside><Card className="sticky top-24 border-slate-200 shadow-xl"><CardHeader><p className="text-xs font-bold uppercase tracking-[0.18em] text-hyle-green">Start your journey</p><CardTitle className="mt-2 text-3xl text-hyle-navy">{formatInr(course.priceInPaise)}</CardTitle></CardHeader><CardContent className="space-y-5">{enrolled ? <Link href={`/learn/${course.slug}`} className="block"><Button size="lg" variant="accent" className="w-full font-semibold">Continue learning <ArrowRight className="h-4 w-4" /></Button></Link> : <RazorpayCheckoutButton courseId={course.id} courseSlug={course.slug} priceLabel={formatInr(course.priceInPaise)} isLoggedIn={!!user} isFree={course.priceInPaise === 0} />}<div className="space-y-3 border-t pt-5 text-sm text-slate-600">{["Live and recorded lessons", "Progress tracking and resume", "Free preview where available"].map((line) => <div key={line} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-hyle-green" />{line}</div>)}</div>{!user && <p className="text-center text-xs text-slate-500">You&apos;ll be asked to log in before enrollment.</p>}</CardContent></Card></aside>
+    </section>
+  </div>;
 }

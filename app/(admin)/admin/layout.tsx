@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { requireStaff } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 const nav = [
@@ -15,7 +15,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireStaff();
+  const user = await requireAdmin();
 
   return (
     <div className="flex min-h-screen">

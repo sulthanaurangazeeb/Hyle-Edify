@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   if (!course || !course.isPublished) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
+  if (course.priceInPaise === 0) {
+    return NextResponse.json({ error: "Free courses use direct enrollment." }, { status: 400 });
+  }
 
   const existing = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId: user.id, courseId: course.id } },

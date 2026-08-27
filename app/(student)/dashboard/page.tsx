@@ -84,7 +84,7 @@ export default async function DashboardPage() {
               <p className="text-muted-foreground">
                 You haven&apos;t enrolled in any course yet.
               </p>
-              <Link href="/#courses">
+              <Link href="/courses">
                 <Button variant="accent" className="font-semibold">
                   Browse courses
                 </Button>

@@ -1,105 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MonitorPlay, Radio, TrendingUp, ShieldCheck } from "lucide-react";
+import type { Metadata } from "next";
+import { ArrowRight, BrainCircuit, CheckCircle2, GraduationCap, HeartHandshake, Radio, Sparkles, Target, Trophy, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/components/course-card";
+import { CTASection, FeatureCard, SectionHeading } from "@/components/marketing/blocks";
 
 export const revalidate = 300;
+export const metadata: Metadata = { title: "Hyle Edify | Where Matter Becomes Mastery", description: "Build strong academic foundations with Hyle Edify live and recorded learning for school students." };
 
-const features = [
-  {
-    icon: MonitorPlay,
-    title: "Recorded classes",
-    text: "Structured video lessons you can rewatch anytime, at your own pace.",
-  },
-  {
-    icon: Radio,
-    title: "Live classes",
-    text: "Interactive sessions on Zoom/Google Meet with your teachers.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Progress tracking",
-    text: "Pick up exactly where you left off — we track every second you learn.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure payments",
-    text: "UPI, cards & netbanking via Razorpay. Instant course access.",
-  },
-];
+const stats = [[GraduationCap, "10+", "Years teaching experience"], [Users, "1,000+", "Students"], [HeartHandshake, "16+", "Faculty & educators"], [Sparkles, "8+", "Programs"], [Radio, "Live + Recorded", "Learning modes"], [Target, "3+ years", "Hyle Edify"]] as const;
+const previewBenefits: Array<[LucideIcon, string, string]> = [[GraduationCap, "Academic excellence", "Strong foundations and regular learning habits."], [Radio, "Learning experience", "Live interaction and recorded replay where provided."], [HeartHandshake, "Students + parents together", "Progress visibility that keeps the journey connected."], [Target, "Future readiness", "A careful school-level direction towards future pathways."]];
 
 export default async function LandingPage() {
-  const courses = await prisma.course.findMany({
-    where: { isPublished: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const courses = await prisma.course.findMany({ where: { isPublished: true }, orderBy: { sortOrder: "asc" }, take: 3, select: { id: true, title: true, slug: true, priceInPaise: true, thumbnailUrl: true, subtitle: true, description: true } });
+  return <>
+    <section className="relative overflow-hidden bg-[#f4faf7]"><div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#d9efc9]/60 blur-3xl" /><div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-28"><div className="relative z-10 hyle-reveal"><div className="mb-5 inline-flex items-center gap-2 rounded-full border border-hyle-green/30 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-hyle-navy"><Sparkles className="h-3.5 w-3.5 text-hyle-green" />Learning with purpose</div><h1 className="max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-hyle-navy sm:text-6xl">Where <span className="text-hyle-green">Matter</span> becomes mastery.</h1><p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">Build strong academic foundations today for tomorrow&apos;s opportunities—with thoughtful teaching, live connection, and lessons learners can revisit.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link href="/courses"><Button size="lg" variant="accent" className="w-full font-semibold shadow-lg shadow-hyle-green/20 sm:w-auto">Explore courses <ArrowRight className="h-4 w-4" /></Button></Link><Link href="/register"><Button size="lg" variant="outline" className="w-full sm:w-auto">Start learning free</Button></Link><Link href="/contact" className="inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold text-hyle-navy hover:bg-white">Contact us</Link></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-slate-600"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-hyle-green" />Live + recorded</span><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-hyle-green" />Progress you can see</span></div></div><div className="relative mx-auto w-full max-w-lg lg:justify-self-end"><div className="absolute inset-8 rounded-[2rem] bg-hyle-navy/10 blur-2xl" /><div className="relative overflow-hidden rounded-[2rem] border border-white bg-white p-5 shadow-2xl shadow-hyle-navy/10"><div className="flex items-center justify-between border-b pb-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-hyle-green">The Hyle approach</p><p className="mt-1 text-lg font-semibold text-hyle-navy">Curiosity → clarity → confidence</p></div><Image src="/brand/logo-mark.png" alt="Hyle Edify mark" width={58} height={58} className="h-12 w-12" /></div><div className="relative mt-5 grid min-h-[280px] grid-cols-2 gap-3 overflow-hidden rounded-2xl bg-[#eef6f9] p-4"><div className="absolute -right-12 top-8 h-40 w-40 rounded-full border-[18px] border-hyle-green/30" /><div className="absolute -bottom-20 -left-8 h-44 w-44 rounded-full border-[24px] border-hyle-navy/10" /><div className="relative col-span-2 flex items-end rounded-xl bg-hyle-navy p-5 text-white"><div><GraduationCap className="mb-8 h-9 w-9 text-hyle-green" /><p className="text-xl font-semibold">Make every concept count.</p><p className="mt-1 text-sm text-white/65">A premium learning space for school students.</p></div></div><div className="relative rounded-xl bg-white p-4"><BrainCircuit className="h-6 w-6 text-hyle-green" /><p className="mt-6 text-sm font-semibold text-hyle-navy">Ask better questions</p></div><div className="relative rounded-xl bg-[#d9efc9] p-4"><Target className="h-6 w-6 text-hyle-navy" /><p className="mt-6 text-sm font-semibold text-hyle-navy">Keep moving forward</p></div></div></div></div></div></section>
 
-  return (
-    <>
-      {/* Hero */}
-      <section className="bg-gradient-to-b from-secondary to-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-20 text-center">
-          <Image
-            src="/brand/logo-mark.png"
-            alt="Hyle Edify logo"
-            width={112}
-            height={112}
-            priority
-            className="h-24 w-24 drop-shadow-sm sm:h-28 sm:w-28"
-          />
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-hyle-navy sm:text-5xl">
-            Where <span className="text-hyle-green">Matter</span> Becomes{" "}
-            <span className="text-hyle-green">Mastery</span>
-          </h1>
-          <p className="max-w-2xl text-lg text-muted-foreground">
-            Foundation courses for NEET & JEE aspirants and rock-solid basics in
-            Mathematics — with recorded lessons, live classes and personal
-            progress tracking.
-          </p>
-          <div className="flex gap-3">
-            <Link href="/#courses">
-              <Button size="lg" variant="accent" className="font-semibold">
-                Explore courses
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="lg" variant="outline">
-                Create free account
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+    <section className="border-y bg-white"><div className="mx-auto grid max-w-7xl grid-cols-2 px-4 py-8 sm:grid-cols-3 lg:grid-cols-6 lg:px-8">{stats.map(([Icon, value, label]) => <div key={label} className="group border-slate-200 px-4 py-4 first:pl-0 sm:border-l lg:first:border-0"><Icon className="h-4 w-4 text-hyle-green transition-transform group-hover:-translate-y-0.5" /><p className="mt-3 text-xl font-bold text-hyle-navy sm:text-2xl">{value}</p><p className="mt-1 text-xs leading-5 text-slate-500">{label}</p></div>)}</div></section>
 
-      {/* Features */}
-      <section className="mx-auto grid max-w-6xl gap-6 px-4 py-16 sm:grid-cols-2 lg:grid-cols-4">
-        {features.map((f) => (
-          <div key={f.title} className="rounded-xl border p-6">
-            <f.icon className="mb-3 h-8 w-8 text-hyle-green" />
-            <h3 className="mb-1 font-semibold text-hyle-navy">{f.title}</h3>
-            <p className="text-sm text-muted-foreground">{f.text}</p>
-          </div>
-        ))}
-      </section>
+    <section id="featured-courses" className="bg-white"><div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><SectionHeading eyebrow="Foundation programmes" title="A clear place to begin." description="Explore a few of the current published courses. Visit the catalogue for the full learning path." /><Link href="/courses" className="shrink-0 text-sm font-semibold text-hyle-navy hover:text-hyle-green">View all courses <ArrowRight className="ml-1 inline h-4 w-4" /></Link></div>{courses.length ? <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{courses.map((course) => <CourseCard key={course.id} course={course} />)}</div> : <div className="mt-10 rounded-2xl border border-dashed p-10 text-center text-slate-500">New foundation programmes will appear here soon.</div>}</div></section>
 
-      {/* Courses */}
-      <section id="courses" className="bg-muted/50">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="mb-2 text-center text-3xl font-bold text-hyle-navy">
-            Our Courses
-          </h2>
-          <p className="mb-10 text-center text-muted-foreground">
-            Start your journey from matter to mastery.
-          </p>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
+    <section className="bg-[#f6faf8]"><div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow="Why Hyle Edify" title="Serious about learning. Warm about people." description="A thoughtful foundation for learners and families." /><div className="mt-10 grid gap-4 md:grid-cols-2">{previewBenefits.map(([Icon, title, text]) => <FeatureCard key={title} icon={Icon} title={title}>{text}</FeatureCard>)}</div><div className="mt-8 text-center"><Link href="/about" className="text-sm font-semibold text-hyle-navy hover:text-hyle-green">Learn about Hyle Edify <ArrowRight className="ml-1 inline h-4 w-4" /></Link></div></div></section>
+
+    <section className="bg-hyle-navy text-white"><div className="mx-auto grid max-w-7xl gap-8 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8"><div id="students" className="scroll-mt-24"><p className="text-sm font-bold uppercase tracking-[0.18em] text-[#b6e993]">For students</p><h2 className="mt-3 text-3xl font-bold sm:text-4xl">Learn with energy. Practice with confidence.</h2><p className="mt-4 max-w-xl leading-7 text-white/70">Live classes, recorded learning, replay, doubt support, regular practice, and progress tracking in one clear learning journey.</p><Link href="/courses" className="mt-6 inline-flex items-center gap-2 font-semibold text-[#b6e993] hover:text-white">Start learning <ArrowRight className="h-4 w-4" /></Link></div><div id="parents" className="scroll-mt-24 rounded-2xl border border-white/15 bg-white/5 p-6"><p className="text-sm font-bold uppercase tracking-[0.18em] text-[#b6e993]">For parents</p><h2 className="mt-3 text-2xl font-bold sm:text-3xl">See the learning journey clearly.</h2><p className="mt-3 text-sm leading-6 text-white/65">Academic progress, assessments, expert faculty, personalized attention, parent communication, and careful NEET/JEE foundation direction.</p><Link href="/contact" className="mt-6 inline-flex items-center gap-2 font-semibold text-[#b6e993] hover:text-white">Talk to Hyle Edify <ArrowRight className="h-4 w-4" /></Link></div></div></section>
+
+    <section className="bg-white"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-8"><div><SectionHeading eyebrow="How it works" title="A simple path from first lesson to mastery." description="Choose a course, start learning, and build a rhythm that lasts." /></div><div className="grid gap-3 sm:grid-cols-2">{[["01", "Choose a course"], ["02", "Start learning"], ["03", "Track progress"], ["04", "Build mastery"]].map(([number, title]) => <div key={number} className="rounded-xl border bg-[#f8fbfa] p-5"><span className="text-sm font-bold text-hyle-green">{number}</span><p className="mt-5 font-semibold text-hyle-navy">{title}</p></div>)}</div></div></section>
+
+    <section className="bg-[#f6faf8]"><div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><SectionHeading eyebrow="Student achievements & stories" title="Real stories, when they are ready." description="Verified achievements and testimonials will be published responsibly." /><div className="flex gap-3"><Link href="/achievements" className="text-sm font-semibold text-hyle-navy hover:text-hyle-green">Achievements <ArrowRight className="ml-1 inline h-4 w-4" /></Link><Link href="/contact" className="text-sm font-semibold text-hyle-navy hover:text-hyle-green">Contact us <ArrowRight className="ml-1 inline h-4 w-4" /></Link></div></div><div className="mt-8 grid gap-4 sm:grid-cols-3">{[[Trophy, "Achievement story"], [Users, "Student story"], [HeartHandshake, "Parent story"]].map(([Icon, title]) => <div key={title as string} className="rounded-2xl border border-dashed bg-white p-6"><Icon className="h-7 w-7 text-hyle-green" /><p className="mt-6 font-semibold text-hyle-navy">{title as string}</p><span className="mt-3 inline-flex rounded-full bg-[#eef6f9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hyle-navy">Coming soon</span></div>)}</div></div></section>
+
+    <section className="bg-white"><div className="mx-auto grid max-w-7xl gap-5 px-4 py-16 sm:px-6 md:grid-cols-2 lg:px-8"><div className="rounded-2xl border border-hyle-green/30 bg-[#f6faf8] p-6"><div className="flex items-center gap-3"><BrainCircuit className="h-7 w-7 text-hyle-green" /><span className="rounded-full bg-[#d9efc9] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hyle-navy">Current</span></div><h2 className="mt-6 text-2xl font-bold text-hyle-navy">Learning progress that is visible.</h2><p className="mt-2 text-sm leading-6 text-slate-600">Explore the current learning experience and the AI direction being built thoughtfully.</p><Link href="/ai-learning" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-hyle-navy hover:text-hyle-green">AI learning approach <ArrowRight className="h-4 w-4" /></Link></div><div className="rounded-2xl border bg-hyle-navy p-6 text-white"><div className="flex items-center gap-3"><Sparkles className="h-7 w-7 text-[#b6e993]" /><span className="rounded-full border border-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/70">Coming soon</span></div><h2 className="mt-6 text-2xl font-bold">More ways to learn.</h2><p className="mt-2 text-sm leading-6 text-white/65">Additional foundation programmes, AI-powered learning features, and advanced learning tools are on the roadmap.</p><Link href="/ai-learning" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#b6e993] hover:text-white">See what&apos;s ahead <ArrowRight className="h-4 w-4" /></Link></div></div></section>
+
+    <CTASection title="Ready to begin?" text="Explore current Hyle Edify courses or talk with us about the right next step." href="/courses" label="Explore courses" />
+  </>;
 }

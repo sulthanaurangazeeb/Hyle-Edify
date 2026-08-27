@@ -102,3 +102,36 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: #d9efc9;
+  color: #07456b;
+}
+
+@keyframes hyle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes hyle-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hyle-float {
+  animation: hyle-float 6s ease-in-out infinite;
+}
+
+.hyle-reveal {
+  animation: hyle-reveal 700ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hyle-float,
+  .hyle-reveal { animation: none; }
+}
