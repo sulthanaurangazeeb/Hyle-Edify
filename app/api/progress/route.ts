@@ -4,11 +4,13 @@ import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const COMPLETION_THRESHOLD = 0.9; // ≥90% of the video counts as completed
+const MAX_DELTA_SECONDS = 15;
+const MAX_POSITION_SECONDS = 2_147_483_647; // PostgreSQL/Prisma Int upper bound
 
 const bodySchema = z.object({
   videoId: z.string().uuid(),
-  positionSeconds: z.number().int().min(0),
-  deltaSeconds: z.number().int().min(0).max(120).default(0), // watch time since last beat
+  positionSeconds: z.number().finite().min(0),
+  deltaSeconds: z.number().finite().min(0).default(0), // watch time since last beat; capped server-side below
 });
 
 /** Player heartbeat — upserts per-second progress for the current user. */
@@ -22,7 +24,9 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
-  const { videoId, positionSeconds, deltaSeconds } = parsed.data;
+  const { videoId } = parsed.data;
+  const position = Math.min(MAX_POSITION_SECONDS, Math.max(0, Math.floor(parsed.data.positionSeconds)));
+  const deltaSeconds = Math.min(MAX_DELTA_SECONDS, Math.max(0, Math.floor(parsed.data.deltaSeconds)));
 
   const video = await prisma.video.findUnique({
     where: { id: videoId },
@@ -57,8 +61,8 @@ export async function POST(request: Request) {
 
   const clampedPosition =
     video.durationSeconds > 0
-      ? Math.min(positionSeconds, video.durationSeconds)
-      : positionSeconds;
+      ? Math.min(position, video.durationSeconds)
+      : position;
   const maxPosition = Math.max(existing?.maxPositionSeconds ?? 0, clampedPosition);
   const completed =
     (existing?.completed ?? false) ||
@@ -101,9 +105,13 @@ export async function GET(request: Request) {
   if (!videoId) {
     return NextResponse.json({ error: "videoId required" }, { status: 400 });
   }
+  const parsedVideoId = z.string().uuid().safeParse(videoId);
+  if (!parsedVideoId.success) {
+    return NextResponse.json({ error: "Invalid videoId" }, { status: 400 });
+  }
 
   const progress = await prisma.videoProgress.findUnique({
-    where: { userId_videoId: { userId: user.id, videoId } },
+    where: { userId_videoId: { userId: user.id, videoId: parsedVideoId.data } },
   });
 
   return NextResponse.json({

@@ -40,6 +40,13 @@ export async function requireStaff(): Promise<User> {
   return user;
 }
 
+/** ADMIN-only access — students and teachers are bounced to their dashboard. */
+export async function requireAdmin(): Promise<User> {
+  const user = await requireUser();
+  if (user.role !== "ADMIN") redirect("/dashboard");
+  return user;
+}
+
 export async function isEnrolled(userId: string, courseId: string) {
   const enrollment = await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId } },

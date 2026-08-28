@@ -29,6 +29,7 @@ interface CheckoutButtonProps {
   priceLabel: string; // "₹6,000"
   isLoggedIn: boolean;
   courseSlug: string;
+  isFree?: boolean;
 }
 
 export function RazorpayCheckoutButton({
@@ -36,6 +37,7 @@ export function RazorpayCheckoutButton({
   priceLabel,
   isLoggedIn,
   courseSlug,
+  isFree = false,
 }: CheckoutButtonProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -51,6 +53,23 @@ export function RazorpayCheckoutButton({
 
     setBusy(true);
     try {
+      if (isFree) {
+        const enrollmentRes = await fetch("/api/enroll/free", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId }),
+        });
+        if (enrollmentRes.status === 401) {
+          router.push(`/login?next=/courses/${courseSlug}`);
+          return;
+        }
+        const enrollment = await enrollmentRes.json().catch(() => ({}));
+        if (!enrollmentRes.ok) throw new Error(enrollment.error ?? "Could not complete enrollment.");
+        router.push(`/learn/${enrollment.courseSlug ?? courseSlug}?enrolled=1`);
+        router.refresh();
+        return;
+      }
+
       const ok = await loadRazorpayScript();
       if (!ok || !window.Razorpay) {
         throw new Error("Could not load the payment gateway. Check your connection.");

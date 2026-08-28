@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 const HEARTBEAT_SECONDS = 10;
+const MAX_DELTA_SECONDS = 15;
 
 interface VideoPlayerProps {
   /** Our DB Video.id — used for progress logging */
@@ -48,10 +49,12 @@ export function VideoPlayer({
 
   const sendProgress = useCallback(
     (useBeacon = false) => {
+      const rawPosition = Number(lastPositionRef.current);
+      const rawDelta = Number(watchedDeltaRef.current);
       const payload = {
         videoId,
-        positionSeconds: Math.floor(lastPositionRef.current),
-        deltaSeconds: Math.min(120, Math.round(watchedDeltaRef.current)),
+        positionSeconds: Number.isFinite(rawPosition) ? Math.max(0, Math.floor(rawPosition)) : 0,
+        deltaSeconds: Number.isFinite(rawDelta) ? Math.min(MAX_DELTA_SECONDS, Math.max(0, Math.floor(rawDelta))) : 0,
       };
       if (payload.deltaSeconds === 0 && !useBeacon) {
         // Still report position (e.g. after a seek), but skip no-op beats
