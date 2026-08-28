@@ -1,0 +1,12 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export function BrandStorySection() {
+  return <section className="bg-white"><div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-hyle-green">About Hyle Edify</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-hyle-navy sm:text-4xl">More than a classroom. A foundation for what comes next.</h2><p className="mt-5 max-w-xl leading-7 text-slate-600">Hyle Edify is a foundation institute helping students build strong conceptual foundations in Science and Mathematics through structured early preparation for future competitive examinations such as NEET and JEE.</p><Link href="/about" className="mt-7 inline-flex"><Button variant="outline">Our foundation approach <ArrowRight className="h-4 w-4" /></Button></Link></div><div className="relative overflow-hidden rounded-3xl border bg-[#f8fbfa] shadow-lg"><Image src="/brand/hyle-edify-facebook-cover.jpg" alt="Hyle Edify brand cover" width={4000} height={1756} sizes="(max-width: 1024px) 100vw, 55vw" className="h-auto w-full object-contain" loading="lazy" /></div></div></section>;
+}
+
+export function BrandCtaSection() {
+  return <section className="bg-hyle-navy text-white"><div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.8fr] lg:px-8"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-[#b6e993]">Begin with a strong foundation</p><h2 className="mt-3 text-3xl font-bold sm:text-4xl">Start your foundation journey with Hyle Edify.</h2><p className="mt-4 max-w-xl leading-7 text-white/70">Explore early competitive-exam preparation designed around strong concepts, consistent practice, and future readiness.</p><Link href="/courses" className="mt-7 inline-flex"><Button size="lg" variant="accent">Explore Foundation Programs <ArrowRight className="h-4 w-4" /></Button></Link></div><div className="overflow-hidden rounded-2xl border border-white/15 bg-white/5"><Image src="/brand/hyle-edify-youtube-cover.jpg" alt="Hyle Edify official brand cover" width={3000} height={1336} sizes="(max-width: 1024px) 100vw, 40vw" className="h-auto w-full object-contain" loading="lazy" /></div></div></section>;
+}

@@ -135,3 +135,7 @@ html {
   .hyle-float,
   .hyle-reveal { animation: none; }
 }
+
+/* Keep shared marketing headings readable inside navy feature sections. */
+.bg-hyle-navy .text-hyle-navy { color: #fff; }
+.bg-hyle-navy .text-slate-600 { color: rgb(226 232 240 / 0.82); }
