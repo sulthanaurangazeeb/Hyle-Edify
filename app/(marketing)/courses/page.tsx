@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { CourseCard } from "@/components/course-card";
 import { PageHero } from "@/components/marketing/blocks";
 
-export const metadata: Metadata = { title: "Courses | Hyle Edify", description: "Explore Hyle Edify foundation programmes for school students with live and recorded learning." };
+export const metadata: Metadata = { title: "Foundation Programs | Hyle Edify", description: "Explore early competitive-exam preparation from Class 6 onwards, with Science and Mathematics foundations for future NEET and JEE pathways." };
 export const revalidate = 300;
 
 export default async function CoursesPage() {
