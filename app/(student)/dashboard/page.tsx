@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { LiveSessionCard } from "@/components/live-session-card";
+import Image from "next/image";
+
+function safeImageUrl(url: string | null) {
+  if (!url) return null;
+  if (url.startsWith("/")) return url;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname.endsWith("supabase.co") ? url : null;
+  } catch { return null; }
+}
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -107,6 +117,7 @@ export default async function DashboardPage() {
 
               return (
                 <Card key={course.id} className="flex flex-col">
+                  {safeImageUrl(course.thumbnailUrl) && <Image src={safeImageUrl(course.thumbnailUrl)!} alt={`${course.title} thumbnail`} width={640} height={360} className="aspect-video w-full rounded-t-lg object-cover" />}
                   <CardHeader>
                     <CardTitle className="text-base text-hyle-navy">
                       {course.title}
