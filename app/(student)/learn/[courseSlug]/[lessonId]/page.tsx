@@ -8,6 +8,7 @@ import { cn, formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { VideoPlayer } from "@/components/video-player";
+import { MarkLessonComplete } from "@/components/mark-lesson-complete";
 
 export default async function LessonPage({
   params,
@@ -55,6 +56,8 @@ export default async function LessonPage({
   const currentProgress = lesson.video
     ? progressByVideo.get(lesson.video.id)
     : undefined;
+  const completedLessons = allLessons.filter((item) => item.video && progressByVideo.get(item.video.id)?.completed).length;
+  const progressPercent = allLessons.length > 0 ? Math.round((completedLessons / allLessons.length) * 100) : 0;
 
   const idx = allLessons.findIndex((l) => l.id === lesson.id);
   const prev = idx > 0 ? allLessons[idx - 1] : null;
@@ -65,10 +68,8 @@ export default async function LessonPage({
       {/* Player column */}
       <div className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          <Link href="/dashboard" className="hover:underline">
-            Dashboard
-          </Link>{" "}
-          / {course.title}
+          <Link href="/dashboard" className="hover:underline">Dashboard</Link>{" "}/{" "}
+          <Link href={`/learn/${course.slug}`} className="hover:underline">{course.title}</Link>{" "}/ {lesson.title}
         </div>
 
         {lesson.type === "RECORDED" && lesson.video ? (
@@ -149,12 +150,20 @@ export default async function LessonPage({
             )}
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-white p-4">
+          <div>
+            <p className="text-sm font-semibold text-hyle-navy">Course progress</p>
+            <p className="text-xs text-muted-foreground">{completedLessons} of {allLessons.length} lessons completed · {progressPercent}%</p>
+          </div>
+          {lesson.video && <MarkLessonComplete lessonId={lesson.id} courseSlug={course.slug} completed={currentProgress?.completed ?? false} />}
+        </div>
       </div>
 
       {/* Playlist column */}
       <aside className="lg:border-l lg:pl-6">
         <h2 className="mb-4 font-semibold text-hyle-navy">Course content</h2>
         <div className="space-y-5">
+          {course.modules.length === 0 && <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">No lessons have been published for this course yet.</p>}
           {course.modules.map((mod, mi) => (
             <div key={mod.id}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

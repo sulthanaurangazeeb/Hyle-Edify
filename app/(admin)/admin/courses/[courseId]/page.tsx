@@ -21,7 +21,7 @@ export default async function AdminCourseEditorPage({ params }: { params: Promis
       <div className="flex items-center gap-3"><Link href="/admin/courses"><Button variant="ghost" size="sm">← Courses</Button></Link><h1 className="text-2xl font-bold text-hyle-navy">{course.title}</h1><Badge variant={course.isPublished ? "accent" : "secondary"}>{course.isPublished ? "Published" : "Draft"}</Badge></div>
       <Card className="max-w-2xl"><CardHeader><CardTitle className="text-base">Course settings</CardTitle></CardHeader><CardContent><CourseForm course={course} /></CardContent></Card>
       <section className="space-y-6"><h2 className="text-lg font-semibold text-hyle-navy">Content</h2>
-        {course.modules.length === 0 && <p className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">No modules yet. Add the first module below.</p>}
+        {course.modules.length === 0 && <p className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">This course has no modules yet. Add a module to begin building the syllabus.</p>}
         {course.modules.map((mod, mi) => (
           <Card key={mod.id}>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3"><div><CardTitle className="text-base">Module {mi + 1}: {mod.title}</CardTitle><p className="mt-1 text-xs text-muted-foreground">Sort order: {mod.sortOrder}</p></div><div className="flex items-center gap-2"><ModuleForm courseId={course.id} module={mod} /><DeleteForm action={deleteModule} fields={{ id: mod.id, courseId: course.id }} label="Delete module" warning="Delete this module and its lessons, videos, and progress? This cannot be undone." /></div></CardHeader>
